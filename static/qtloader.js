@@ -338,7 +338,6 @@ function QtLoader(config)
 
     function completeLoadEmscriptenModule(applicationName, emscriptenModuleSource, wasmModule) {
 
-        console.log("About to show the Qt App. The port should be ", process.env.PORT)
         // The wasm binary has been compiled into a module during resource download,
         // and is ready to be instantiated. Define the instantiateWasm callback which
         // emscripten will call to create the instance.
