@@ -73,12 +73,12 @@ def dispatch(environ, start_response):
         print('PATH_INFO == \'/\'')
         start_response('200 OK', [('content-type', 'text/html')])
         return [open(os.path.join(os.path.dirname(__file__),
-            'mysite/templates/WASM_Client.html')).read()]
+            'frontend-app/OdsValidatorFrontend.html')).read()]
    
     elif environ['PATH_INFO'] == '/qtloader.js':
         print('PATH_INFO == \'/qtloader.js\'')
         str_data = open(os.path.join(os.path.dirname(__file__),
-            'mysite/static/qtloader.js')).read() 
+            'static/qtloader.js')).read() 
         start_response('200 OK', [('content-type', 'application/javascript') ])
 
         return [str_data]
@@ -86,23 +86,23 @@ def dispatch(environ, start_response):
     elif environ['PATH_INFO'] == '/qtlogo.svg':
         print('PATH_INFO == \'/qtlogo.svg\'')
         img_data = open(os.path.join(os.path.dirname(__file__),
-            'mysite/static/qtlogo.svg'), 'rb').read() 
+            'static/qtlogo.svg'), 'rb').read() 
         start_response('200 OK', [('content-type', 'image/svg+xml'),
                                 ('content-length', str(len(img_data)))])
 
         return [img_data]
 
-    elif environ['PATH_INFO'] == '/WASM_Client.js':
-        print('PATH_INFO == \'/WASM_Client.js\'')
+    elif environ['PATH_INFO'] == '/OdsValidatorFrontend.js':
+        print('PATH_INFO == \'/OdsValidatorFrontend.js\'')
         str_data = open(os.path.join(os.path.dirname(__file__),
-            'mysite/static/WASM_Client.js')).read() 
+            'static/OdsValidatorFrontend.js')).read() 
         start_response('200 OK', [('content-type', 'application/javascript')])
         return [str_data]
 
-    elif environ['PATH_INFO'] == '/WASM_Client.wasm':
-        print('PATH_INFO == \'/WASM_Client.wasm\'')
+    elif environ['PATH_INFO'] == '/OdsValidatorFrontend.wasm':
+        print('PATH_INFO == \'/OdsValidatorFrontend.wasm\'')
         bin_data = open(os.path.join(os.path.dirname(__file__),
-            'mysite/static/WASM_Client.wasm'), 'rb').read() 
+            'static/OdsValidatorFrontend.wasm'), 'rb').read() 
         start_response('200 OK', [('content-type', 'application/wasm')])
         return [bin_data]		
 
@@ -113,6 +113,6 @@ def dispatch(environ, start_response):
 		
 
 if __name__ == '__main__':
-    listener = eventlet.listen(('127.0.0.1', 7000))
+    listener = eventlet.listen(('0.0.0.0', os.environ.get("PORT", 80)))
     print('\nVisit http://localhost:7000/ in your websocket-capable browser.\n')
     wsgi.server(listener, dispatch)
