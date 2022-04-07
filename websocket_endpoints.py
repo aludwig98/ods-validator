@@ -1,4 +1,5 @@
 import os
+import json
 from eventlet import websocket, greenthread
 import traceback
 
@@ -37,6 +38,20 @@ def saveData(ws):
     with open(new_file, 'wb') as file:
         file.write(data)
 
+@websocket.WebSocketWSGI
+def parseOdsData(ws):
+    filename = ws.wait()
+    parse_result = {}
+    parse_result["color"] = "green"
+    parse_result["message"] = f"The File ({filename}) has been successfully loaded!"
+
+    try:
+        ws.send(json.dump(parse_result))
+    except Exception as e:
+        print('Client websocket not available')
+        ws.close()
+        return
+
 
 def dispatch(environ, start_response):
 
@@ -49,10 +64,10 @@ def dispatch(environ, start_response):
     try:
         if environ['PATH_INFO'] == '/data':
             print('PATH_INFO == \'/data\'')
-            return saveData(environ, start_response)
+            return parseOdsData(environ, start_response)
         elif environ['PATH_INFO'] == '/message':
             print('PATH_INFO == \'/message\'')
-            return processMessage(environ, start_response)
+            return parseOdsData(environ, start_response)
         elif environ['PATH_INFO'] == '/timer':
             print('PATH_INFO == \'/timer\'')
             if execTimer:
