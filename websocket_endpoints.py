@@ -1,5 +1,6 @@
 import os
-from eventlet import wsgi, websocket, greenthread
+from eventlet import websocket, greenthread
+import traceback
 
 @websocket.WebSocketWSGI
 def startTimer(ws):
@@ -45,64 +46,67 @@ def dispatch(environ, start_response):
 
     global execTimer
 
-    if environ['PATH_INFO'] == '/data':
-        print('PATH_INFO == \'/data\'')
-        return saveData(environ, start_response)
-    elif environ['PATH_INFO'] == '/message':
-        print('PATH_INFO == \'/message\'')
-        return processMessage(environ, start_response)
-    elif environ['PATH_INFO'] == '/timer':
-        print('PATH_INFO == \'/timer\'')
-        if execTimer:
-            execTimer = False
-            start_response('200 OK', [])
-            return []
+    try:
+        if environ['PATH_INFO'] == '/data':
+            print('PATH_INFO == \'/data\'')
+            return saveData(environ, start_response)
+        elif environ['PATH_INFO'] == '/message':
+            print('PATH_INFO == \'/message\'')
+            return processMessage(environ, start_response)
+        elif environ['PATH_INFO'] == '/timer':
+            print('PATH_INFO == \'/timer\'')
+            if execTimer:
+                execTimer = False
+                start_response('200 OK', [])
+                return []
+            else:
+                execTimer = True
+                return startTimer(environ, start_response)
+
+            """
+                STANDARD HTML ENDPOINTS
+            """
+
+        elif environ['PATH_INFO'] == '/':
+            print('PATH_INFO == \'/\'')
+            start_response('200 OK', [('content-type', 'text/html')])
+            return [open(os.path.join(os.path.dirname(__file__),
+                'frontend-app/OdsValidatorFrontend.html')).read()]
+    
+        elif environ['PATH_INFO'] == '/qtloader.js':
+            print('PATH_INFO == \'/qtloader.js\'')
+            str_data = open(os.path.join(os.path.dirname(__file__),
+                'static/qtloader.js')).read() 
+            start_response('200 OK', [('content-type', 'application/javascript') ])
+
+            return [str_data]
+
+        elif environ['PATH_INFO'] == '/qtlogo.svg':
+            print('PATH_INFO == \'/qtlogo.svg\'')
+            img_data = open(os.path.join(os.path.dirname(__file__),
+                'static/qtlogo.svg'), 'rb').read() 
+            start_response('200 OK', [('content-type', 'image/svg+xml'),
+                                    ('content-length', str(len(img_data)))])
+
+            return [img_data]
+
+        elif environ['PATH_INFO'] == '/OdsValidatorFrontend.js':
+            print('PATH_INFO == \'/OdsValidatorFrontend.js\'')
+            str_data = open(os.path.join(os.path.dirname(__file__),
+                'static/OdsValidatorFrontend.js')).read() 
+            start_response('200 OK', [('content-type', 'application/javascript')])
+            return [str_data]
+
+        elif environ['PATH_INFO'] == '/OdsValidatorFrontend.wasm':
+            print('PATH_INFO == \'/OdsValidatorFrontend.wasm\'')
+            bin_data = open(os.path.join(os.path.dirname(__file__),
+                'static/OdsValidatorFrontend.wasm'), 'rb').read() 
+            start_response('200 OK', [('content-type', 'application/wasm')])
+            return [bin_data]		
+
         else:
-            execTimer = True
-            return startTimer(environ, start_response)
-
-        """
-            STANDARD HTML ENDPOINTS
-        """
-
-    elif environ['PATH_INFO'] == '/':
-        print('PATH_INFO == \'/\'')
-        start_response('200 OK', [('content-type', 'text/html')])
-        return [open(os.path.join(os.path.dirname(__file__),
-            'frontend-app/OdsValidatorFrontend.html')).read()]
-   
-    elif environ['PATH_INFO'] == '/qtloader.js':
-        print('PATH_INFO == \'/qtloader.js\'')
-        str_data = open(os.path.join(os.path.dirname(__file__),
-            'static/qtloader.js')).read() 
-        start_response('200 OK', [('content-type', 'application/javascript') ])
-
-        return [str_data]
-
-    elif environ['PATH_INFO'] == '/qtlogo.svg':
-        print('PATH_INFO == \'/qtlogo.svg\'')
-        img_data = open(os.path.join(os.path.dirname(__file__),
-            'static/qtlogo.svg'), 'rb').read() 
-        start_response('200 OK', [('content-type', 'image/svg+xml'),
-                                ('content-length', str(len(img_data)))])
-
-        return [img_data]
-
-    elif environ['PATH_INFO'] == '/OdsValidatorFrontend.js':
-        print('PATH_INFO == \'/OdsValidatorFrontend.js\'')
-        str_data = open(os.path.join(os.path.dirname(__file__),
-            'static/OdsValidatorFrontend.js')).read() 
-        start_response('200 OK', [('content-type', 'application/javascript')])
-        return [str_data]
-
-    elif environ['PATH_INFO'] == '/OdsValidatorFrontend.wasm':
-        print('PATH_INFO == \'/OdsValidatorFrontend.wasm\'')
-        bin_data = open(os.path.join(os.path.dirname(__file__),
-            'static/OdsValidatorFrontend.wasm'), 'rb').read() 
-        start_response('200 OK', [('content-type', 'application/wasm')])
-        return [bin_data]		
-
-    else:
-        path_info = environ['PATH_INFO']
-        print('PATH_INFO = {}'.format(path_info))
-        return None
+            path_info = environ['PATH_INFO']
+            print('PATH_INFO = {}'.format(path_info))
+            return None
+    except Exception as _:
+        print(str(traceback.format_exc()))
