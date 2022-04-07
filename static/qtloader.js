@@ -338,6 +338,7 @@ function QtLoader(config)
 
     function completeLoadEmscriptenModule(applicationName, emscriptenModuleSource, wasmModule) {
 
+        console.log("The web address for this instance: ", location.origin.replace(/^http/, 'ws'));
         // The wasm binary has been compiled into a module during resource download,
         // and is ready to be instantiated. Define the instantiateWasm callback which
         // emscripten will call to create the instance.

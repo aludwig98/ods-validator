@@ -90,6 +90,15 @@ def dispatch(environ, start_response):
 
             return [img_data]
 
+        elif environ['PATH_INFO'] == '/favicon.ico':
+            print('PATH_INFO == \'/favicon.ico\'')
+            img_data = open(os.path.join(os.path.dirname(__file__),
+                'static/qtlogo.svg'), 'rb').read() 
+            start_response('200 OK', [('content-type', 'image/svg+xml'),
+                                    ('content-length', str(len(img_data)))])
+
+            return [img_data]
+
         elif environ['PATH_INFO'] == '/OdsValidatorFrontend.js':
             print('PATH_INFO == \'/OdsValidatorFrontend.js\'')
             str_data = open(os.path.join(os.path.dirname(__file__),
