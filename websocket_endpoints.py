@@ -39,7 +39,7 @@ def parseOdsData(ws):
     try:
         ws.send(json.dump(parse_result))
     except Exception as e:
-        print('Client websocket not available')
+        print(f'Client websocket not available: {e}')
         ws.close()
         return
 
