@@ -1,8 +1,6 @@
 import eventlet, os
 from websocket_endpoints import dispatch
-from eventlet import wsgi
-
-execTimer = False		
+from eventlet import wsgi	
 
 if __name__ == '__main__':
     print(f"Hosting on port: {int(os.environ.get('PORT', 80))}")

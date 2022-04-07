@@ -6,19 +6,7 @@ import traceback
 @websocket.WebSocketWSGI
 def startTimer(ws):
     n_cnt = 0
-    global execTimer
-    while execTimer:
-        print('Timer fired! {}'.format(n_cnt))
-
-        greenthread.sleep(1)
-        n_cnt+=1
-
-        try:
-            ws.send('Timer fired! {}'.format(n_cnt))
-        except Exception as e:
-            print('Client websocket not available')
-            ws.close()
-            return
+    return
 
 @websocket.WebSocketWSGI
 def processMessage(ws):
@@ -41,10 +29,13 @@ def saveData(ws):
 @websocket.WebSocketWSGI
 def parseOdsData(ws):
     filename = ws.wait()
+    data = ws.wait()
+    data_size = float(len(data)) / 1000 #kb
+
     parse_result = {}
     parse_result["color"] = "green"
     parse_result["message"] = f"The File ({filename}) has been successfully loaded!"
-
+    print(f'Preparing to parse: {filename} of size: {data_size}')
     try:
         ws.send(json.dump(parse_result))
     except Exception as e:
@@ -59,8 +50,6 @@ def dispatch(environ, start_response):
         WEBSOCKETS
     """
 
-    global execTimer
-
     try:
         if environ['PATH_INFO'] == '/data':
             print('PATH_INFO == \'/data\'')
@@ -68,15 +57,15 @@ def dispatch(environ, start_response):
         elif environ['PATH_INFO'] == '/message':
             print('PATH_INFO == \'/message\'')
             return parseOdsData(environ, start_response)
-        elif environ['PATH_INFO'] == '/timer':
-            print('PATH_INFO == \'/timer\'')
-            if execTimer:
-                execTimer = False
-                start_response('200 OK', [])
-                return []
-            else:
-                execTimer = True
-                return startTimer(environ, start_response)
+        # elif environ['PATH_INFO'] == '/timer':
+        #     print('PATH_INFO == \'/timer\'')
+        #     if execTimer:
+        #         execTimer = False
+        #         start_response('200 OK', [])
+        #         return []
+        #     else:
+        #         execTimer = True
+        #         return startTimer(environ, start_response)
 
             """
                 STANDARD HTML ENDPOINTS
