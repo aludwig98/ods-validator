@@ -417,6 +417,9 @@ function QtLoader(config)
 
         Module.qtCanvasElements = config.canvasElements;
 
+        // Add the arguments for the web endpoint
+        Module['arguments'] = ["websocket_url|" + location.origin.replace(/^http/, 'ws')];
+
         config.restart = function() {
 
             // Restart by reloading the page. This will wipe all state which means
