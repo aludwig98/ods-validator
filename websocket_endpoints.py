@@ -37,7 +37,7 @@ def parseOdsData(ws):
     parse_result["message"] = f"The File ({filename}) has been successfully loaded!"
     print(f'Preparing to parse: {filename} of size: {data_size}')
     try:
-        ws.send(json.dump(parse_result))
+        ws.send(json.dumps(parse_result))
     except Exception as e:
         print(f'Client websocket not available: {e}')
         ws.close()
