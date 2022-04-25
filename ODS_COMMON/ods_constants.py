@@ -6,6 +6,9 @@ class FILE_STATUS(Enum):
     FILE_STATUS_ERROR = 3
 
 class ODS_Data_Types(Enum):
+    def __repr__(self):
+        return self.name
+
     DATE_TYPE    = 0
 
     # Integers
@@ -38,13 +41,6 @@ class ODS_Reequired_Columns_Keys(Enum):
     WARN_IF_BLANK = "warn_if_blank"
     SPECIAL_VALIDATOR = "special_validator"
 
-ODS_Data_Type_Strings = {
-    ODS_Data_Types.DATE_TYPE: "DATE",
-    ODS_Data_Types.NUM6_TYPE: "NUM6",
-    ODS_Data_Types.NUM13V4_TYPE: "NUM13V4",
-    ODS_Data_Types.NUM11V2_TYPE: "NUM11V2",
-}
-
 ODS_Integer_Data_Types = {
     ODS_Data_Types.NUM6_TYPE: 6,
     ODS_Data_Types.NUM8_TYPE: 8,
@@ -71,32 +67,32 @@ ODS_Char_Data_Types = {
 }
 
 ODS_Column_Label_Lookup = [
-    "A",
-    "B",
-    "C",
-    "D",
-    "E",
-    "F",
-    "G",
-    "H",
-    "I",
-    "J",
-    "K",
-    "L",
-    "M",
-    "N",
-    "O",
-    "P",
-    "Q",
-    "R"
-    "S",
-    "T",
-    "U",
-    "V",
-    "W",
-    "X",
-    "Y",
-    "Z"
+    "A", #0
+    "B", #1
+    "C", #2
+    "D", #3
+    "E", #4
+    "F", #5
+    "G", #6
+    "H", #7
+    "I", #8
+    "J", #9
+    "K", #10
+    "L", #11
+    "M", #12
+    "N", #13
+    "O", #14
+    "P", #15
+    "Q", #16
+    "R", #17
+    "S", #18
+    "T", #19
+    "U", #20
+    "V", #21
+    "W", #22
+    "X", #23
+    "Y", #24
+    "Z", #25
 ]
 
 class BeforeDecimalTooLong(Exception):
@@ -108,5 +104,11 @@ class AfterDecimalTooLong(Exception):
 class DataTooLong(Exception):
     pass
 
-class DataEmpty(Exception):
+class DataEmptyWarning(Exception):
+    pass
+
+class DataEmptyError(Exception):
+    pass
+
+class PossibleIssue(Exception):
     pass

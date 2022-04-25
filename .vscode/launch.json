@@ -11,7 +11,7 @@
             "program": "${workspaceFolder}/ods_validator_main.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["-i D:/Code/Other/For_Gemma/ODS_Validator/example_ods_files/Other_templates_2015-16_V4.ods"]
+            "args": ["-i D:/Code/Other/For_Gemma/ODS_Validator/example_ods_files/Other_templates_2015-16_V4_updated.ods"]
         }
     ]
 }
