@@ -15,23 +15,24 @@ class ODS_Data_Types(Enum):
     NUM6_TYPE    = 1
     NUM8_TYPE    = 2 
     NUMBER_TYPE  = 3
+    NUMBER_10_TYPE = 4
     
     # Floats
-    NUM6V2_TYPE  = 4
-    NUM11V2_TYPE = 5
-    NUM13V4_TYPE = 6
+    NUM6V2_TYPE  = 5
+    NUM11V2_TYPE = 6
+    NUM13V4_TYPE = 7
     
     # Characters   
-    CHAR3_TYPE   = 7
-    CHAR4_TYPE   = 8
-    CHAR8_TYPE   = 9
-    CHAR9_TYPE   = 10
-    CHAR10_TYPE  = 11
-    CHAR14_TYPE  = 12
-    CHAR18_TYPE  = 13
-    CHAR27_TYPE  = 14
-    CHAR35_TYPE  = 15
-    CHAR120_TYPE = 16
+    CHAR3_TYPE   = 8
+    CHAR4_TYPE   = 9
+    CHAR8_TYPE   = 10
+    CHAR9_TYPE   = 11
+    CHAR10_TYPE  = 12
+    CHAR14_TYPE  = 13
+    CHAR18_TYPE  = 14
+    CHAR27_TYPE  = 15
+    CHAR35_TYPE  = 16
+    CHAR120_TYPE = 17
 
 
 class ODS_Reequired_Columns_Keys(Enum):
@@ -111,4 +112,7 @@ class DataEmptyError(Exception):
     pass
 
 class PossibleIssue(Exception):
+    pass
+
+class WrongDateFormat(Exception):
     pass

@@ -21,7 +21,7 @@ if __name__ == '__main__':
         try:
             validator.validate_file(file)
         except Exception as e:
-            print(f"Unknown Error: {e}")
+            print(f"Unknown Error: Failed to validate the file {file}. Exception: {e}")
 
         if output_dir is None or output_dir == "":
             output_dir = os.path.dirname(os.path.realpath(__file__))

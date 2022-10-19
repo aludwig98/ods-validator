@@ -3,7 +3,7 @@ import traceback
 import typing
 import math
 from ODS_COMMON.ods_file import ODS_File
-from ODS_COMMON.ods_constants import DataEmptyWarning, DataEmptyError, ODS_Char_Data_Types, ODS_Data_Types, ODS_Column_Label_Lookup, AfterDecimalTooLong, BeforeDecimalTooLong, DataTooLong, ODS_Float_Data_Types, ODS_Integer_Data_Types, PossibleIssue
+from ODS_COMMON.ods_constants import DataEmptyWarning, DataEmptyError, ODS_Char_Data_Types, ODS_Data_Types, ODS_Column_Label_Lookup, AfterDecimalTooLong, BeforeDecimalTooLong, DataTooLong, ODS_Float_Data_Types, ODS_Integer_Data_Types, PossibleIssue, WrongDateFormat
 from ODS_COMMON.ods_constants import ODS_Reequired_Columns_Keys as RCKeys
 
 class ODS_Validator:
@@ -42,8 +42,8 @@ class ODS_Validator:
                 13: {RCKeys.COLUMN_NAME: '14.\nGrantor company address line 4',RCKeys.REQUIRED: False, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR18_TYPE, RCKeys.WARN_IF_BLANK: False},
                 14: {RCKeys.COLUMN_NAME: '15.\nGrantor company country',RCKeys.REQUIRED: False, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR18_TYPE, RCKeys.WARN_IF_BLANK: False},
                 15: {RCKeys.COLUMN_NAME: '16.\nGrantor company postcode',RCKeys.REQUIRED: False, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR8_TYPE, RCKeys.WARN_IF_BLANK: False},
-                16: {RCKeys.COLUMN_NAME: '17.\nGrantor Company Registration Number (CRN) , if applicable',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR10_TYPE, RCKeys.WARN_IF_BLANK: True},
-                17: {RCKeys.COLUMN_NAME: '18.\nGrantor company Corporation Tax reference, if applicable',RCKeys.REQUIRED: False, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR10_TYPE, RCKeys.WARN_IF_BLANK: False},
+                16: {RCKeys.COLUMN_NAME: '17.\nGrantor Company Registration Number (CRN) , if applicable',RCKeys.REQUIRED: False, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR10_TYPE, RCKeys.WARN_IF_BLANK: False},
+                17: {RCKeys.COLUMN_NAME: '18.\nGrantor company Corporation Tax reference, if applicable',RCKeys.REQUIRED: False, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR10_TYPE, RCKeys.WARN_IF_BLANK: False, RCKeys.SPECIAL_VALIDATOR: self.validate_corp_tax_ref},
                 18: {RCKeys.COLUMN_NAME: '19.\nGrantor company PAYE reference',RCKeys.REQUIRED: False, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR14_TYPE, RCKeys.WARN_IF_BLANK: False},
                 19: {RCKeys.COLUMN_NAME: '20.\nName of the company whose securities under option',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR120_TYPE, RCKeys.WARN_IF_BLANK: True},
                 20: {RCKeys.COLUMN_NAME: '21.\nCompany whose securities under option – Address line 1',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR27_TYPE, RCKeys.WARN_IF_BLANK: True},
@@ -53,7 +53,7 @@ class ODS_Validator:
                 24: {RCKeys.COLUMN_NAME: '25.\nCompany whose securities under option – Country',RCKeys.REQUIRED: False, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR18_TYPE, RCKeys.WARN_IF_BLANK: False},
                 25: {RCKeys.COLUMN_NAME: '26.\nCompany whose securities under option – Postcode',RCKeys.REQUIRED: False, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR8_TYPE, RCKeys.WARN_IF_BLANK: False},
                 26: {RCKeys.COLUMN_NAME: '27.\nCompany Reference Number (CRN) of company whose securities under option',RCKeys.REQUIRED: False, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR10_TYPE, RCKeys.WARN_IF_BLANK: False},
-                27: {RCKeys.COLUMN_NAME: '28.\nCorporation Tax reference of company whose securities under option',RCKeys.REQUIRED: False, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR10_TYPE, RCKeys.WARN_IF_BLANK: False, RCKeys.SPECIAL_VALIDATOR: self.ensure_no_spaces},
+                27: {RCKeys.COLUMN_NAME: '28.\nCorporation Tax reference of company whose securities under option',RCKeys.REQUIRED: False, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR10_TYPE, RCKeys.WARN_IF_BLANK: False, RCKeys.SPECIAL_VALIDATOR: self.validate_corp_tax_ref},
                 28: {RCKeys.COLUMN_NAME: '29.\nPAYE reference of company whose securities under option',RCKeys.REQUIRED: False, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR14_TYPE, RCKeys.WARN_IF_BLANK: False, RCKeys.SPECIAL_VALIDATOR: self.validate_paye_ref},
                 29: {RCKeys.COLUMN_NAME: '30.\nWere the options exercised?\n(yes/no).\nIf yes go to next question\nIf no go to question 38',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR3_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_yes_no},
                 30: {RCKeys.COLUMN_NAME: '31.\nTotal number of securities employee entitled to on exercise of the option before any cashless exercise or other adjustment\ne.g. 100.00',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.NUM11V2_TYPE, RCKeys.WARN_IF_BLANK: False, RCKeys.SPECIAL_VALIDATOR: self.validate_previous_yes_no_was_yes},
@@ -94,7 +94,7 @@ class ODS_Validator:
                 21: {RCKeys.COLUMN_NAME: '22.\nIf shares were not listed on a recognised stock exchange, was valuation agreed with HMRC?\n(yes/no)',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR3_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_previous_yes_no_was_yes_and_this_was_no_or_yes_if_prev_no},
                 22: {RCKeys.COLUMN_NAME: '23.\nIf yes, enter the HMRC reference given',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR10_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_HMRC_ref_Sheet_3},
                 23: {RCKeys.COLUMN_NAME: '24.\nNumber of securities acquired\ne.g. 100.00',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.NUM11V2_TYPE, RCKeys.WARN_IF_BLANK: True},
-                24: {RCKeys.COLUMN_NAME: '25.\nSecurity type. Enter a number from 1 to 3, (follow the link at cell A7 for a list of security types).\nIf restricted go to next question.\nIf convertible go to question 32.\nIf both restricted and convertible enter 1 and answer all questions 26 to 32.\nIf neither restricted nor convertible go to question 29.',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.NUMBER_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_nature_of_restriction},
+                24: {RCKeys.COLUMN_NAME: '25.\nSecurity type. Enter a number from 1 to 3, (follow the link at cell A7 for a list of security types).\nIf restricted go to next question.\nIf convertible go to question 32.\nIf both restricted and convertible enter 1 and answer all questions 26 to 32.\nIf neither restricted nor convertible go to question 29.',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.NUMBER_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_between_1_and_3},
                 25: {RCKeys.COLUMN_NAME: '26.\nIf restricted, nature of restriction. Enter a number from 1-3, follow the link at cell A7 for a list of restrictions',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.NUMBER_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_nature_of_restriction},
                 26: {RCKeys.COLUMN_NAME: '27.\nIf restricted, length of time of restriction in years (if less than a whole year, enter as a decimal fraction, for example 0.6)', RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.NUM6V2_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_length_of_restriction},
                 27: {RCKeys.COLUMN_NAME: '28.\nIf restricted, actual market value per security at date of acquisition\n£\ne.g. 10.1234\n(no entry should be made if an election to disregard ALL restrictions is operated)', RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.NUM13V4_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_restricted_market_val_per_security},
@@ -107,8 +107,8 @@ class ODS_Validator:
                 34: {RCKeys.COLUMN_NAME: "35.\nWas there an artificial reduction in value on acquisition?\n(yes/no)\nIf 'yes' go to question 36, if 'No' go to question 37",RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR3_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_yes_no},
                 35: {RCKeys.COLUMN_NAME: '36.\nIf there was an artificial reduction in value, nature of the artificial reduction\nEnter a number from 1 to 3. Follow the link in cell A7 for a list of types of artificial restriction',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.NUMBER_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_nature_of_artifical_reduction},
                 36: {RCKeys.COLUMN_NAME: '37.\nWere shares acquired under an employee shareholder arrangement?\n(yes/no)',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR3_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_yes_no},
-                37: {RCKeys.COLUMN_NAME: '38.\nIf shares were acquired under an employee shareholder arrangement, was the total actual market value (AMV) of shares £2,000 or more?\n(yes/no)',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR3_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_yes_no},
-                38: {RCKeys.COLUMN_NAME: '39.\nWas PAYE operated?\n(yes/no)',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR3_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_Other_Acquisition_V3_38},
+                37: {RCKeys.COLUMN_NAME: '38.\nIf shares were acquired under an employee shareholder arrangement, was the total actual market value (AMV) of shares £2,000 or more?\n(yes/no)',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR3_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_Other_Acquisition_V3_38},
+                38: {RCKeys.COLUMN_NAME: '39.\nWas PAYE operated?\n(yes/no)',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR3_TYPE, RCKeys.WARN_IF_BLANK: True},
                 39: {RCKeys.COLUMN_NAME: '40.\nWas any adjustment made for amounts subject to apportionment for residence or duties outside the UK (yes/no)',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR3_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_yes_no},
             },
             "Other_RestrictedSecurities_V3": {
@@ -116,7 +116,7 @@ class ODS_Validator:
                 1: {RCKeys.COLUMN_NAME: '2.\nIs the event in relation to a disclosable tax avoidance scheme?\n(yes/no)',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR3_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_yes_no},
                 2: {RCKeys.COLUMN_NAME: '3.\nIf yes, enter the eight-digit scheme reference number (SRN)',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.NUM8_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_srn},
                 3: {RCKeys.COLUMN_NAME: '4.\nEmployee first name',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR35_TYPE, RCKeys.WARN_IF_BLANK: True},
-                4: {RCKeys.COLUMN_NAME: '5.\nEmployee second name\n(if applicable)',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR3_TYPE, RCKeys.WARN_IF_BLANK: False},
+                4: {RCKeys.COLUMN_NAME: '5.\nEmployee second name\n(if applicable)',RCKeys.REQUIRED: False, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR3_TYPE, RCKeys.WARN_IF_BLANK: False},
                 5: {RCKeys.COLUMN_NAME: '6.\nEmployee last name',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR35_TYPE, RCKeys.WARN_IF_BLANK: True},
                 6: {RCKeys.COLUMN_NAME: '7.\nNational Insurance Number\n(if applicable)',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR9_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_NINO},
                 7: {RCKeys.COLUMN_NAME: '8.\nPAYE reference of employing company',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR14_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_paye_ref},
@@ -126,9 +126,9 @@ class ODS_Validator:
                 11: {RCKeys.COLUMN_NAME: '12.\nFor lifting of restrictions, are the shares listed on a recognised stock exchange?\n(yes/no)',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR3_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_yes_no},
                 12: {RCKeys.COLUMN_NAME: '13.\nIf shares were not listed on a recognised stock exchange, was valuation agreed with HMRC?\n(yes/no)',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR3_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_valuation_agreed_wtih_hmrc},
                 13: {RCKeys.COLUMN_NAME: '14.\nIf yes, enter the HMRC reference given',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR10_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_hmrc_ref_given},
-                14: {RCKeys.COLUMN_NAME: '15.\nFor variations, date of variation\n(yyyy-mm-dd)',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.DATE_TYPE, RCKeys.WARN_IF_BLANK: True},
-                15: {RCKeys.COLUMN_NAME: '16.\nFor variations, Actual Market Value (AMV) per security directly before variation\n£\ne.g. 10.1234',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.NUM13V4_TYPE, RCKeys.WARN_IF_BLANK: True},
-                16: {RCKeys.COLUMN_NAME: '17.\nFor variations, Actual Market Value (AMV) per security directly after variation\n£\ne.g. 10.1234\n',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.NUM13V4_TYPE, RCKeys.WARN_IF_BLANK: True},
+                14: {RCKeys.COLUMN_NAME: '15.\nFor variations, date of variation\n(yyyy-mm-dd)',RCKeys.REQUIRED: False, RCKeys.DATA_TYPE: ODS_Data_Types.DATE_TYPE, RCKeys.WARN_IF_BLANK: False},
+                15: {RCKeys.COLUMN_NAME: '16.\nFor variations, Actual Market Value (AMV) per security directly before variation\n£\ne.g. 10.1234',RCKeys.REQUIRED: False, RCKeys.DATA_TYPE: ODS_Data_Types.NUM13V4_TYPE, RCKeys.WARN_IF_BLANK: True},
+                16: {RCKeys.COLUMN_NAME: '17.\nFor variations, Actual Market Value (AMV) per security directly after variation\n£\ne.g. 10.1234\n',RCKeys.REQUIRED: False, RCKeys.DATA_TYPE: ODS_Data_Types.NUM13V4_TYPE, RCKeys.WARN_IF_BLANK: True},
                 17: {RCKeys.COLUMN_NAME: '18.\nHas a National Insurance Contribution election or agreement been operated (yes/no)',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR3_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_yes_no},
                 18: {RCKeys.COLUMN_NAME: '19.\nWas PAYE operated?\n(yes/no)',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR3_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_yes_no},
                 19: {RCKeys.COLUMN_NAME: '20.\nWas any adjustment made for amounts subject to apportionment for residence or duties outside the UK (yes/no)',RCKeys.REQUIRED: True, RCKeys.DATA_TYPE: ODS_Data_Types.CHAR3_TYPE, RCKeys.WARN_IF_BLANK: True, RCKeys.SPECIAL_VALIDATOR: self.validate_yes_no},
@@ -287,7 +287,8 @@ class ODS_Validator:
             # else:
             err_msg, warn_msg = self._check_data_type(row_data[current_index], col_validator_data[RCKeys.DATA_TYPE], col_validator_data[RCKeys.WARN_IF_BLANK], col_validator_data[RCKeys.REQUIRED])
         except Exception as e:
-            print(f"ERROR: {e}. {str(traceback.format_exc())}")
+            print(f"ERROR: Failed to run \"validate_30_answered_yes\". {e}. {str(traceback.format_exc())}")
+            err_msg = "Failed to run \"validate_30_answered_yes\" on the data."
         return err_msg, warn_msg        
 
     def validate_yes_no(self, current_index, row_data, col_validator_data) -> typing.Tuple[list, list]:
@@ -321,7 +322,8 @@ class ODS_Validator:
         except TypeError as _:
             err_msg += "The National Insurance Number must be a string!"
         except Exception as e:
-            print(f"ERROR: {e}")
+            print(f"ERROR: (validate_NINO). {e}")
+            err_msg = "Failed to validate the NINO. Unknown error."
         return err_msg, warn_msg
 
     def validate_paye_ref(self, current_index, row_data, col_validator_data) -> typing.Tuple[list, list]:
@@ -344,16 +346,42 @@ class ODS_Validator:
                 print(f"ERROR (validate_paye_ref): {e}")
         return err_msg, warn_msg
 
-    def ensure_no_spaces(self, current_index, row_data, col_validator_data) -> typing.Tuple[list, list]:
+    def validate_corp_tax_ref(self, current_index, row_data, col_validator_data) -> typing.Tuple[list, list]:
+        """
+        This can either be a CHAR 10 or an integer with 10 digits
+        """
         err_msg = ''
         warn_msg = ''
-        err_msg, warn_msg = self._check_data_type(row_data[current_index], col_validator_data[RCKeys.DATA_TYPE], col_validator_data[RCKeys.WARN_IF_BLANK], col_validator_data[RCKeys.REQUIRED])
-        try:
-            if ' ' in row_data[current_index]:
-                err_msg += "The value should not contain spaces!"
-        except Exception as e:
-            print(f"ERROR: {e}")
+        if type(row_data[current_index]) == int:
+            # Make sure there are 10 digits
+            if len(str(row_data[current_index])) != 10:
+                err_msg = f"The data ({row_data[current_index]}) needs to be a 10 digit number but is only {len(str(row_data[current_index]))} digits!"
+            else:
+                err_msg, warn_msg = self._check_data_type(row_data[current_index], ODS_Data_Types.NUMBER_10_TYPE, col_validator_data[RCKeys.WARN_IF_BLANK], col_validator_data[RCKeys.REQUIRED])
+        elif type(row_data[current_index]) == str:
+            err_msg, warn_msg = self._check_data_type(row_data[current_index], ODS_Data_Types.CHAR10_TYPE, col_validator_data[RCKeys.WARN_IF_BLANK], col_validator_data[RCKeys.REQUIRED])
+            # Make sure there are no spaces
+            try:
+                if ' ' in row_data[current_index]:
+                    err_msg += "The value should not contain spaces!"
+            except Exception as e:
+                print(f"ERROR (ensure_no_spaces): {e}")
+                err_msg = "Failed to run \"ensure_no_spaces\"!"
+        else:
+            err_msg = f"The value ({row_data[current_index]}) must be of type int or string, but is of type {type(row_data[current_index])}"
         return err_msg, warn_msg
+
+    # def ensure_no_spaces(self, current_index, row_data, col_validator_data) -> typing.Tuple[list, list]:
+    #     err_msg = ''
+    #     warn_msg = ''
+    #     err_msg, warn_msg = self._check_data_type(row_data[current_index], col_validator_data[RCKeys.DATA_TYPE], col_validator_data[RCKeys.WARN_IF_BLANK], col_validator_data[RCKeys.REQUIRED])
+    #     try:
+    #         if ' ' in row_data[current_index]:
+    #             err_msg += "The value should not contain spaces!"
+    #     except Exception as e:
+    #         print(f"ERROR (ensure_no_spaces): {e}")
+    #         err_msg = "Failed to run \"ensure_no_spaces\"!"
+    #     return err_msg, warn_msg
 
     def validate_amount_of_money_rx(self, current_index, row_data, col_validator_data) -> typing.Tuple[list, list]:
         err_msg = ''
@@ -365,7 +393,7 @@ class ODS_Validator:
             elif len(str(row_data[37])) > 0 and len(str(row_data[current_index])) > 0:
                 err_msg = "There was a value provided but entry 38 was left blank!"
         except Exception as e:
-            print(f"Unexpected Error: {e}. {str(traceback.format_exc())}")
+            print(f"Unexpected Error: (validate_amount_of_money_rx). {e}. {str(traceback.format_exc())}")
         return err_msg, warn_msg
 
 
@@ -384,7 +412,7 @@ class ODS_Validator:
                 if len(str(row_data[current_index])) > 0:
                     err_msg = "The value in this column was not empty and the previous switch column was not set to yes!"
         except Exception as e:
-            print(f"Unexpected Error: {e}. {str(traceback.format_exc())}")
+            print(f"Unexpected Error: (validate_previous_yes_no_was_yes). {e}. {str(traceback.format_exc())}")
         return err_msg, warn_msg
 
     def validate_previous_yes_no_was_yes_and_this_is_yes_no(self, current_index, row_data, col_validator_data) -> typing.Tuple[str, str]:
@@ -402,7 +430,7 @@ class ODS_Validator:
                 if len(str(row_data[current_index])) > 0:
                     err_msg = "The value in this column was not empty and the previous switch column was not set to yes!"
         except Exception as e:
-            print(f"Unexpected Error: {e}. {str(traceback.format_exc())}")
+            print(f"Unexpected Error: (validate_previous_yes_no_was_yes_and_this_is_yes_no). {e}. {str(traceback.format_exc())}")
 
         new_err_msg, new_warn_msg = self.validate_yes_no(current_index, row_data, col_validator_data)
 
@@ -420,7 +448,7 @@ class ODS_Validator:
             elif row_data[current_index] != '' and row_data[current_index] is not None:
                 err_msg = "The value should be blank since the previous column was not answered \"yes\""
         except Exception as e:
-            print(f"Unexpected error: {e}")
+            print(f"Unexpected error: (validate_srn). {e}")
         return err_msg, warn_msg
 
     def validate_between_1_and_9(self, current_index, row_data, col_validator_data) -> typing.Tuple[str, str]:
@@ -432,7 +460,7 @@ class ODS_Validator:
             if val < 1 or val > 9:
                 err_msg = f"The entry must be a number greater than or equal to 1 and less than or equal to 9! Provided value was {val}"
         except Exception as e:
-            print(f"Unexpected error: {e}")
+            print(f"Unexpected error: (validate_between_1_and_9). {e}")
         return err_msg, warn_msg
 
     def validate_between_1_and_3(self, current_index, row_data, col_validator_data) -> typing.Tuple[str, str]:
@@ -444,26 +472,23 @@ class ODS_Validator:
             if val < 1 or val > 3:
                 err_msg = f"The entry must be a number greater than or equal to 1 and less than or equal to 3! Provided value was {val}"
         except Exception as e:
-            print(f"Unexpected error: {e}")
+            print(f"Unexpected error: (validate_between_1_and_3). {e}")
         return err_msg, warn_msg
 
     def validate_nature_of_restriction(self, current_index, row_data, col_validator_data) -> typing.Tuple[str, str]:
         err_msg = ''
         warn_msg = ''
-        err_msg, warn_msg = self._check_data_type(row_data[current_index], col_validator_data[RCKeys.DATA_TYPE], col_validator_data[RCKeys.WARN_IF_BLANK], col_validator_data[RCKeys.REQUIRED])
         try:
             if row_data[current_index-1] != "" and row_data[current_index-1] is not None:
                 prev_val = row_data[current_index-1]
                 if type(prev_val) == int and prev_val == 1:
-                    val = int(row_data[current_index])
-                    if val < 1 or val > 3:
-                        err_msg = f"The entry must be a number greater than or equal to 1 and less than or equal to 3! Provided value was {val}"
+                    self.validate_between_1_and_3(current_index, row_data, col_validator_data)
                 elif len(str(row_data[current_index])) > 0:
                     err_msg = "This entry should be left blank because the answer to \"25\" is not \"1\"!"
             elif len(str(row_data[current_index])) > 0:
                 err_msg = "25 was left blank so this column should be blank!"                
         except Exception as e:
-            print(f"Unexpected error: {e}")
+            print(f"Unexpected error: (validate_nature_of_restriction). {e}")
         return err_msg, warn_msg
 
 
@@ -473,12 +498,12 @@ class ODS_Validator:
         try:
             if row_data[current_index-1].lower() == "yes":
                 # Make sure this row is blank
-                if row_data[current_index] != '' or row_data[current_index] is not None:
+                if row_data[current_index] is not None and len(str(row_data[current_index])) > 0:
                     err_msg = "The previous yes/no column was answered \"yes\" so this entry should be blank"
             else:
                 err_msg, warn_msg = self.validate_yes_no(current_index, row_data, col_validator_data)
         except Exception as e:
-            print(f"Unexpected error: {e}")
+            print(f"Unexpected error: (validate_previous_yes_no_was_yes_and_this_was_no_or_yes_if_prev_no). {e}")
         return err_msg, warn_msg
 
     def validate_length_of_restriction(self, current_index, row_data, col_validator_data) -> typing.Tuple[str, str]:
@@ -491,7 +516,7 @@ class ODS_Validator:
             elif len(str(row_data[current_index])) > 0:
                 err_msg = "This entry should be left blank because the answer to \"25\" was not \"1\"!"
         except Exception as e:
-            print(f"Unexpected error: {e}")
+            print(f"Unexpected error: (validate_length_of_restriction). {e}")
         return err_msg, warn_msg
 
     def validate_restricted_market_val_per_security(self, current_index, row_data, col_validator_data) -> typing.Tuple[str, str]:
@@ -504,7 +529,7 @@ class ODS_Validator:
             elif len(str(row_data[current_index])) > 0:
                 err_msg = "This entry should be left blank because the answer to \"25\" was not \"1\"!"
         except Exception as e:
-            print(f"Unexpected error: {e}")
+            print(f"Unexpected error: (validate_restricted_market_val_per_security). {e}")
         return err_msg, warn_msg
 
     def validate_unrestricted_market_val_per_security(self, current_index, row_data, col_validator_data) -> typing.Tuple[str, str]:
@@ -517,7 +542,7 @@ class ODS_Validator:
             elif len(str(row_data[current_index])) > 0:
                 err_msg = "This entry should be left blank because the answer to \"25\" was not \"2\"!"
         except Exception as e:
-            print(f"Unexpected error: {e}")
+            print(f"Unexpected error: (validate_unrestricted_market_val_per_security). {e}")
         return err_msg, warn_msg
 
     def validate_election_happened_answer(self, current_index, row_data, col_validator_data) -> typing.Tuple[str, str]:
@@ -530,7 +555,7 @@ class ODS_Validator:
             elif len(str(row_data[current_index])) > 0:
                 err_msg = "This entry should be left blank because the answer to \"25\" was not \"1\"!"
         except Exception as e:
-            print(f"Unexpected error: {e}")
+            print(f"Unexpected error: (validate_election_happened_answer). {e}")
         return err_msg, warn_msg
 
     def validate_some_or_all(self, current_index, row_data, col_validator_data) -> typing.Tuple[str, str]:
@@ -548,7 +573,7 @@ class ODS_Validator:
             elif len(str(row_data[current_index])) > 0:
                 err_msg = "This entry should be left blank because the answer to \"25\" was not \"1\"!"
         except Exception as e:
-            print(f"Unexpected error: {e}")
+            print(f"Unexpected error: (validate_some_or_all). {e}")
         return err_msg, warn_msg
 
     def validate_market_value_per_share_convertible(self, current_index, row_data, col_validator_data) -> typing.Tuple[str, str]:
@@ -561,7 +586,7 @@ class ODS_Validator:
             elif len(str(row_data[current_index])) > 0:
                 err_msg = "This entry should be left blank because the answer to \"25\" was not \"3\"!"
         except Exception as e:
-            print(f"Unexpected error: {e}")
+            print(f"Unexpected error: (validate_market_value_per_share_convertible). {e}")
         return err_msg, warn_msg
 
     def validate_nature_of_artifical_reduction(self, current_index, row_data, col_validator_data) -> typing.Tuple[str, str]:
@@ -578,33 +603,33 @@ class ODS_Validator:
             elif len(str(row_data[current_index])) > 0:
                 err_msg = "This entry should be left blank because the answer to \"34\" was not \"yes\"!"
         except Exception as e:
-            print(f"Unexpected error: {e}")
+            print(f"Unexpected error: (validate_nature_of_artifical_reduction). {e}")
         return err_msg, warn_msg
 
     def validate_valuation_agreed_wtih_hmrc(self, current_index, row_data, col_validator_data) -> typing.Tuple[str, str]:
         err_msg = ''
         warn_msg = ''
         try:
-            if str(row_data[11]).lower() == "yes":
+            if str(row_data[11]).lower() == "no":
                 if len(str(row_data[current_index])) > 0:
-                    err_msg ="Because Number 12 has been answered yes, this column should be answered no."
+                    err_msg ="Because Number 12 has been answered no, this column should be answered."
                 else:
                     err_msg, warn_msg = self.validate_yes_no(current_index, row_data, col_validator_data)
         except Exception as e:
-            print(f"Unexpected error: {e}")
+            print(f"Unexpected error: (validate_valuation_agreed_wtih_hmrc). {e}")
         return err_msg, warn_msg
 
     def validate_hmrc_ref_given(self, current_index, row_data, col_validator_data) -> typing.Tuple[str, str]:
         err_msg = ''
         warn_msg = ''
         try:
-            if str(row_data[11]).lower() == "yes":
+            if str(row_data[11]).lower() == "no":
                 if len(str(row_data[current_index])) > 0:
-                    err_msg ="Because Number 12 has been answered yes, this column should be answered no."
+                    err_msg ="Because Number 12 has been answered no, this column should be answered."
                 else:
                     err_msg, warn_msg = self._check_data_type(row_data[current_index], col_validator_data[RCKeys.DATA_TYPE],  col_validator_data[RCKeys.WARN_IF_BLANK], col_validator_data[RCKeys.REQUIRED])
         except Exception as e:
-            print(f"Unexpected error: {e}")
+            print(f"Unexpected error: (validate_hmrc_ref_given). {e}")
         return err_msg, warn_msg
 
     def validate_Other_Acquisition_V3_38(self, current_index, row_data, col_validator_data) -> typing.Tuple[str, str]:
@@ -677,7 +702,7 @@ class ODS_Validator:
                     }
                 error_msg_list.append(error_dict)
             except Exception as e:
-                print(f"Unknown Error: {e}")
+                print(f"Unknown Error: (_validate_sheet_index_and_names) {e}")
 
             # Validate the columns in this sheet
             erro_list, warn_list = self._validate_sheet_columns(sheet_name, ods_file_data[sheet_name])
@@ -698,7 +723,7 @@ class ODS_Validator:
             try:
                 required_col_name = required_col_data[RCKeys.COLUMN_NAME]
             except Exception as e:
-                print(f"Unexpected error: {e}")
+                print(f"Unexpected error: (_validate_sheet_columns). {e}")
             try:
                 # Check that the column name exists
                 if required_col_name not in column_names:
@@ -714,7 +739,7 @@ class ODS_Validator:
                     # No further validation can be done since the column was not present
                     continue
             except Exception as e:
-                print(f"Unexpected error: {e}")
+                print(f"Unexpected error: (_validate_sheet_columns). Failed to validate the required columns. {e}")
             try:
                 # Check that the column index is matched
                 if column_names[required_col_index] != required_col_name:
@@ -730,7 +755,7 @@ class ODS_Validator:
                     # No further validation can be done since the column was not present
                     continue
             except Exception as e:
-                print(f"Unexpected error: {e}")
+                print(f"Unexpected error: (_validate_sheet_columns), failed to validate the column index. {e}")
 
         
         # Validate the data in all further rows
@@ -744,7 +769,7 @@ class ODS_Validator:
                         'entry': 'N/A',
                         'row': 'N/A',
                         'column': 'N/A',
-                        'message': f"Row {row_index} has {len(row_data)} columns, but should only have {len(required_columns)}!"
+                        'message': f"Row {row_index+self.column_title_index+2} has {len(row_data)} columns, but should only have {len(required_columns)}!"
                     }
                 error_msg_list.append(error_dict)
                 continue
@@ -759,7 +784,7 @@ class ODS_Validator:
                         required = required_columns[column_index][RCKeys.REQUIRED]
                         err_str, warn_str = self._check_data_type(column_data, data_type, warn_if_empty=warn_if_blank, required=required)
                 except Exception as e:
-                    print(f"Unknown Error (Row {row_index} | Column {column_index}: Trying to parse {sheet_name}. {e}")
+                    print(f"Unknown Error (Row {row_index+self.column_title_index+2} | Column {column_index}: Trying to parse {sheet_name}. {e}")
                     print(str(traceback.format_exc()))
                 try:
                     result = math.floor(column_index / 26) - 1
@@ -773,7 +798,7 @@ class ODS_Validator:
                         wanr_dict = {'sheet_name': sheet_name, 'entry': column_index+1,'row': row_index+self.column_title_index+2, 'column': column_text, 'message': warn_str}
                         warn_msg_list.append(wanr_dict)
                 except Exception as e:
-                    print(f"Unknown Error (Row {row_index} | Column {column_index}: Trying to parse {sheet_name}. The result was ({result}), the remainder was ({remainder}) {e}")
+                    print(f"Unknown Error (Row {row_index+self.column_title_index+2} | Column {column_index}: Trying to parse {sheet_name}. The result was ({result}), the remainder was ({remainder}) {e}")
                     print(str(traceback.format_exc()))
         
         return error_msg_list,warn_msg_list
@@ -784,11 +809,35 @@ class ODS_Validator:
         warning_str = ''
         try:
             if expected_type == ODS_Data_Types.DATE_TYPE:
-                # The input variable should have been parsed as a datetime object
-                if type(input_data) != datetime:
-                    # Invalid parse
+                # First check if it is empty
+                if len(str(input_data)) == 0:
+                    if warn_if_empty and not required:
+                        raise DataEmptyWarning()
+                    elif required:
+                        raise DataEmptyError()
+                elif type(input_data) != datetime and type(input_data) != datetime.date:
+                    alt_formats = [
+                        "%d/%m/%Y",
+                        "%d/%m/%y",
+                        r"%d\%m\%Y",
+                        r"%d\%m\%y",
+                        "%d-%m-%y",
+                        "%d-%m-%Y",
+                        "%m-%d-%y",
+                        "%m-%d-%Y",
+                        "%m/%d/%Y",
+                        "%m/%d/%y",
+                        r"%m\%d\%Y",
+                        r"%m\%d\%y",
+                    ]
+                    for alt_format in alt_formats:
+                        try:
+                            datetime.strptime(input_data, alt_format)
+                            raise WrongDateFormat
+                        except ValueError:
+                            pass
+                    # If we made it this far, we found no matches
                     raise TypeError()
-
 
             elif expected_type in ODS_Integer_Data_Types:
                 # First check if it is empty
@@ -801,12 +850,19 @@ class ODS_Validator:
                         # The cell is empty so no further validation needed
                         return err_string, warning_str
 
-                if type(input_data) != int:
-                    # Invalid parse
-                    raise TypeError()
-                # Check the length of the total character
-                if len(str(input_data)) > ODS_Integer_Data_Types[expected_type]:
-                    raise DataTooLong()
+                # Special handling for the number data type which may be input as a string, so as long as it converts to an int, it is good
+                if expected_type == ODS_Data_Types.NUMBER_TYPE:
+                    try:
+                        _ = int(input_data)
+                    except (ValueError, TypeError) as e:
+                        raise TypeError from e
+                else:
+                    if type(input_data) != int:
+                        # Invalid parse
+                        raise TypeError()
+                    # Check the length of the total character
+                    if len(str(input_data)) > ODS_Integer_Data_Types[expected_type]:
+                        raise DataTooLong()
 
             elif expected_type in ODS_Float_Data_Types:
                 # First check if it is empty
@@ -865,8 +921,10 @@ class ODS_Validator:
             err_string = "The data was empty."
         except PossibleIssue as _:
             warning_str = f"The data ({input_data!r}) is of type ({type(input_data)}) but the expected type is ({expected_type!r})! Note, this might not be an issue if the digits after the decimnal are all 0's."
+        except WrongDateFormat as _:
+            err_string = f"The data ({input_data!r}) is a valid date, but needs to be entered in the format \"yyy-mm-dd\"."
         except Exception as e:
-            err_string = f"General error: {e}"
+            err_string = f"General error: Failed to check the data type. {e}"
         
         return err_string, warning_str
 

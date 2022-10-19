@@ -1,0 +1,16 @@
+sheet_name,entry,row,column,message
+Other_Grants_V3,1,14,A,The data ('1945-02-31') is of type (<class 'str'>) but the expected type is (DATE_TYPE)!
+Other_Options_V3,N/A,N/A,N/A,"Row 10 has 18 columns, but should only have 42!"
+Other_Acquisition_V3,19,10,S,The data ('1') is of type (<class 'str'>) but the expected type is (NUMBER_TYPE)!
+Other_Acquisition_V3,38,10,AL,"The data was empty.The cell is empty, but the value is required!"
+Other_Acquisition_V3,1,11,A,The data ('14-12-2020') is of type (<class 'str'>) but the expected type is (DATE_TYPE)!
+Other_Acquisition_V3,19,11,S,The data ('1') is of type (<class 'str'>) but the expected type is (NUMBER_TYPE)!
+Other_Acquisition_V3,38,11,AL,"The data was empty.The cell is empty, but the value is required!"
+Other_Acquisition_V3,19,12,S,The data ('1') is of type (<class 'str'>) but the expected type is (NUMBER_TYPE)!
+Other_Acquisition_V3,38,12,AL,"The data was empty.The cell is empty, but the value is required!"
+Other_Acquisition_V3,19,17,S,The data ('1') is of type (<class 'str'>) but the expected type is (NUMBER_TYPE)!
+Other_Acquisition_V3,38,17,AL,"The data was empty.The cell is empty, but the value is required!"
+Other_Acquisition_V3,1,18,A,The data ('19-06-2022') is of type (<class 'str'>) but the expected type is (DATE_TYPE)!
+Other_Acquisition_V3,19,18,S,The data ('1') is of type (<class 'str'>) but the expected type is (NUMBER_TYPE)!
+Other_Acquisition_V3,38,18,AL,"The data was empty.The cell is empty, but the value is required!"
+Other_Acquisition_V3,N/A,N/A,N/A,"Row 19 has 41 columns, but should only have 40!"
